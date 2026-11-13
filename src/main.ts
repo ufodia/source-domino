@@ -13,6 +13,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
 const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 let sources = demoSources.map(s => ({ ...s })); let report: Report; let selected = 'lab'; let collapsed = false; let threshold = 0.55; let editing: string | null = null;
+let importVersion = 0;
 function message(text: string, error = false) { el('message').textContent = text; el('message').classList.toggle('error', error); }
 function refresh() { report = analyzeSources(sources, threshold); el('source-count').textContent = `${sources.length}`; el('citation-count').textContent = `${report.edges.filter(e => e.kind === 'citation').length}`; el('family-count').textContent = `${report.groups.length}`; renderGraph(); renderInspector(); renderSources(); }
 function node<T extends keyof SVGElementTagNameMap>(tag: T, attributes: Record<string, string> = {}, text?: string): SVGElementTagNameMap[T] { const item = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [key, value] of Object.entries(attributes)) item.setAttribute(key, value); if (text !== undefined) item.textContent = text; return item; }
@@ -78,7 +79,7 @@ function renderSources() {
   });
   el<HTMLButtonElement>('add').disabled = sources.length >= 20;
 }
-function markCustom() { el('corpus-title').textContent = 'Your source investigation'; el('corpus-label').textContent = 'LOCAL CORPUS'; }
+function markCustom() { importVersion++; el('corpus-title').textContent = 'Your source investigation'; el('corpus-label').textContent = 'LOCAL CORPUS'; }
 function openEditor(source?: Source) {
   editing = source?.id ?? null; el('edit-title').textContent = source ? 'Edit source' : 'Add source';
   el<HTMLInputElement>('source-title').value = source?.title ?? ''; el<HTMLInputElement>('source-url').value = source?.url ?? ''; el<HTMLInputElement>('source-date').value = source?.publishedAt ?? ''; el<HTMLTextAreaElement>('source-content').value = source?.content ?? ''; el('edit-error').textContent = ''; el<HTMLDialogElement>('edit-dialog').showModal();
@@ -87,15 +88,16 @@ el<HTMLFormElement>('source-form').onsubmit = event => {
   event.preventDefault(); const source: Source = { id: editing ?? `custom-${crypto.randomUUID()}`, url: el<HTMLInputElement>('source-url').value, title: el<HTMLInputElement>('source-title').value, content: el<HTMLTextAreaElement>('source-content').value, ...(el<HTMLInputElement>('source-date').value ? { publishedAt: el<HTMLInputElement>('source-date').value } : {}) };
   try { const updated = editing ? sources.map(s => s.id === editing ? source : s) : [...sources, source]; sources = validateSources(updated); selected = source.id; markCustom(); refresh(); el<HTMLDialogElement>('edit-dialog').close(); message('Source saved. Relationships recalculated from the supplied text.'); } catch (error) { el('edit-error').textContent = (error as Error).message; }
 };
-for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close]')) button.onclick = () => el<HTMLDialogElement>(button.dataset.close!).close();
+for (const button of document.querySelectorAll<HTMLButtonElement>('[data-close]')) button.onclick = () => { if (button.dataset.close === 'import-dialog') importVersion++; el<HTMLDialogElement>(button.dataset.close!).close(); };
+el<HTMLDialogElement>('import-dialog').addEventListener('cancel', () => { importVersion++; });
 el('add').onclick = () => openEditor();
 el('collapse').onclick = () => { collapsed = !collapsed; el('collapse').textContent = collapsed ? 'Expand families' : 'Collapse families'; el('collapse').setAttribute('aria-pressed', String(collapsed)); renderGraph(); };
 el<HTMLInputElement>('threshold').oninput = event => { el('threshold-value').textContent = `${(event.target as HTMLInputElement).value}%`; };
 el<HTMLInputElement>('threshold').onchange = event => { threshold = +(event.target as HTMLInputElement).value / 100; refresh(); message('Wording families recalculated. Citations do not change with the threshold.'); };
-el('demo').onclick = () => { sources = demoSources.map(s => ({ ...s })); selected = 'lab'; threshold = 0.55; el<HTMLInputElement>('threshold').value = '55'; el('threshold-value').textContent = '55%'; el('corpus-title').textContent = 'The small-study echo'; el('corpus-label').textContent = 'SYNTHETIC DEMO'; refresh(); message('Synthetic six-source corpus loaded. No demo URLs are fetched.'); };
-el('import-open').onclick = () => { el('import-error').textContent = ''; el<HTMLDialogElement>('import-dialog').showModal(); };
-function applyImport(text: string) { try { sources = parseSources(text); selected = sources[0].id; markCustom(); refresh(); el<HTMLDialogElement>('import-dialog').close(); message(`Imported ${sources.length} sources. Text was analyzed locally.`); } catch (error) { el('import-error').textContent = (error as Error).message; } }
+el('demo').onclick = () => { importVersion++; sources = demoSources.map(s => ({ ...s })); selected = 'lab'; threshold = 0.55; el<HTMLInputElement>('threshold').value = '55'; el('threshold-value').textContent = '55%'; el('corpus-title').textContent = 'The small-study echo'; el('corpus-label').textContent = 'SYNTHETIC DEMO'; refresh(); message('Synthetic six-source corpus loaded. No demo URLs are fetched.'); };
+el('import-open').onclick = () => { importVersion++; el<HTMLInputElement>('import-file').value = ''; el('import-error').textContent = ''; el<HTMLDialogElement>('import-dialog').showModal(); };
+function applyImport(text: string) { importVersion++; try { sources = parseSources(text); selected = sources[0].id; markCustom(); refresh(); el<HTMLDialogElement>('import-dialog').close(); message(`Imported ${sources.length} sources. Text was analyzed locally.`); } catch (error) { el('import-error').textContent = (error as Error).message; } }
 el('import-apply').onclick = () => applyImport(el<HTMLTextAreaElement>('import-text').value);
-el<HTMLInputElement>('import-file').onchange = async event => { const input = event.target as HTMLInputElement; const file = input.files?.[0]; if (!file) return; if (file.size > 2_500_000) { el('import-error').textContent = 'Corpus exceeds the 2.5 MB limit.'; input.value = ''; return; } try { applyImport(await file.text()); } catch (error) { el('import-error').textContent = (error as Error).message; } input.value = ''; };
+el<HTMLInputElement>('import-file').onchange = async event => { const input = event.target as HTMLInputElement; const file = input.files?.[0]; if (!file) return; const version = ++importVersion; if (file.size > 2_500_000) { el('import-error').textContent = 'Corpus exceeds the 2.5 MB limit.'; input.value = ''; return; } try { const text = await file.text(); if (version !== importVersion) return; applyImport(text); input.value = ''; } catch (error) { if (version === importVersion) { el('import-error').textContent = (error as Error).message; input.value = ''; } } };
 el('export').onclick = () => { const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = 'source-domino-report.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); message('Report downloaded. It contains your supplied source text.'); };
 refresh(); message('Synthetic demo ready. Solid arrows are citations; dashed lines show shared wording.');

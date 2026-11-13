@@ -51,6 +51,13 @@ beforeEach(() => {
 });
 
 describe('bounded response handling with mocked public DNS and transport', () => {
+  it('preserves literal plain text rather than removing text that resembles HTML', async () => {
+    const body = 'A < 5 and B > 3. Literal &amp; and <script>example</script> are source text.';
+    installResponses([{ status: 200, headers: { 'content-type': 'text/plain; charset=utf-8' }, body }]);
+    const source = await collectSource('https://public.example/notes.txt', 0);
+    expect(source.content).toBe(body);
+    expect(source.title).toBe('public.example');
+  });
   it('destroys a redirect body before following and revalidates the next public target', async () => {
     installResponses([
       { status: 302, headers: { location: '/final', 'content-length': '999999999' } },

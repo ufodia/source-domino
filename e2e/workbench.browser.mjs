@@ -26,3 +26,24 @@ test('local workbench: analysis, evidence, export and responsive layout',async({
   expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
   expect(errors).toEqual([]);
 });
+
+for(const closeMode of ['button','escape'])test(`closing a pending corpus import with ${closeMode} preserves the newer demo`,async({page})=>{
+  await page.addInitScript(()=>{
+    const original=File.prototype.text;
+    File.prototype.text=async function(){
+      if(this.name==='delayed.json')await new Promise(resolve=>{window.releaseImport=resolve;});
+      const text=await original.call(this);window.importReadFinished=true;return text;
+    };
+  });
+  await page.goto('/');await page.locator('#import-open').click();
+  const sources=[1,2].map(i=>({id:`old-${i}`,url:`https://old.example/${i}`,title:`Old source ${i}`,content:'A pending corpus must not overwrite newer work.'}));
+  await page.locator('#import-file').setInputFiles({name:'delayed.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({sources}))});
+  await expect.poll(()=>page.evaluate(()=>typeof window.releaseImport)).toBe('function');
+  if(closeMode==='escape')await page.keyboard.press('Escape');
+  else await page.getByRole('button',{name:'Close corpus import'}).click();
+  await page.locator('#demo').click();
+  await page.evaluate(()=>window.releaseImport());
+  await expect.poll(()=>page.evaluate(()=>window.importReadFinished)).toBe(true);
+  await expect(page.locator('#source-count')).toHaveText('6');
+  await expect(page.locator('#corpus-label')).toHaveText('SYNTHETIC DEMO');
+});

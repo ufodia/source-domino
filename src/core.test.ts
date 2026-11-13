@@ -38,6 +38,19 @@ describe('relationship evidence', () => {
   it('extracts unique citation URLs from markdown and plain text', () => {
     expect(extractUrls('Read [this](https://example.org/a). Also https://example.org/a#part')).toEqual(['https://example.org/a']);
   });
+  it('preserves balanced URL parentheses while removing prose and markdown delimiters', () => {
+    const url = 'https://example.org/Function_(mathematics)';
+    expect(extractUrls(`Read [this](${url}). Also ${url}.`)).toEqual([url]);
+    const report = analyzeSources([
+      { ...demoSources[0], url },
+      { ...demoSources[1], content: `A separate source cites ${url}.` },
+    ]);
+    expect(report.edges.find(edge => edge.kind === 'citation')?.evidence).toBe(url);
+  });
+  it('trims a long run of trailing delimiters without losing balanced URL characters', () => {
+    const url = 'https://example.org/Function_(mathematics)';
+    expect(extractUrls(url + ')'.repeat(50000) + '.')).toEqual([url]);
+  });
   it('finds a syndicated excerpt inside a longer source', () => {
     const excerpt = 'Participants completed fewer repeated searches when the assistant linked each answer to the original paragraph.';
     expect(overlap(demoSources[0].content, excerpt).score).toBe(1);

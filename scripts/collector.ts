@@ -33,7 +33,7 @@ export function validateTarget(value: string): URL {
   if (isIP(host) && !isPublicAddress(host)) throw new Error('Private, reserved, and non-public addresses are blocked.');
   return url;
 }
-async function requestPinned(url: URL): Promise<{ body: string; redirect?: string }> {
+async function requestPinned(url: URL): Promise<{ body: string; redirect?: string; plainText?: boolean }> {
   const hostname = url.hostname.replace(/^\[|\]$/g, '');
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('DNS resolution timed out.')), TIMEOUT_MS); });
@@ -66,7 +66,7 @@ async function requestPinned(url: URL): Promise<{ body: string; redirect?: strin
       const chunks: Buffer[] = []; let size = 0;
       response.on('data', (chunk: Buffer) => { size += chunk.length; if (size > MAX_BYTES) { response.destroy(new Error('Response exceeds the 2 MB limit.')); return; } chunks.push(chunk); });
       response.on('error', reject);
-      response.on('end', () => resolve({ body: Buffer.concat(chunks).toString('utf8') }));
+      response.on('end', () => resolve({ body: Buffer.concat(chunks).toString('utf8'), plainText: /^text\/plain(?:;|$)/i.test(type) }));
     });
     const deadline = setTimeout(() => request.destroy(new Error('Request exceeded the 12-second time limit.')), TIMEOUT_MS);
     request.on('error', reject); request.on('close', () => clearTimeout(deadline)); request.end();
@@ -92,7 +92,9 @@ export async function collectSource(value: string, index: number): Promise<Sourc
   for (let redirects = 0; redirects <= 3; redirects++) {
     const result = await requestPinned(url);
     if (result.redirect) { if (redirects === 3) throw new Error('More than three redirects.'); url = validateTarget(result.redirect); continue; }
-    const parsed = htmlToText(result.body, url.href);
+    const parsed = result.plainText
+      ? { title: url.hostname.slice(0, 500), content: result.body.trim().slice(0, 100000) }
+      : htmlToText(result.body, url.href);
     if (!parsed.content) throw new Error('Source has no readable text.');
     return { id: `source-${index + 1}`, url: normalizeUrl(url.href), ...parsed };
   }

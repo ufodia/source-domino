@@ -2,6 +2,8 @@
 
 The automated workbench test exercises the citation graph, wording-family collapse, report roundtrip, and unsafe-URL rejection. It also checks a 390px viewport for horizontal overflow and collects uncaught browser errors. No API key or model service is required.
 
+Two controlled delayed-file cases close the import dialog with its button and with Escape. Both verify that the old read cannot replace a newer demo corpus.
+
 ```sh
 npm ci
 npx playwright install chromium

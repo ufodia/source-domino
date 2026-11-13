@@ -35,7 +35,9 @@ export function parseSources(text: string): Source[] { if (text.length > 2_500_0
 export function tokens(text: string): string[] { return text.toLocaleLowerCase('en').match(/[\p{L}\p{N}]+/gu) ?? []; }
 export function shingles(text: string, size = 5): Set<string> { const words = tokens(text); const set = new Set<string>(); for (let i = 0; i <= words.length - size; i++) set.add(words.slice(i, i + size).join(' ')); return set; }
 export function overlap(left: string, right: string): { score: number; evidence: string } {
-  const a = shingles(left), b = shingles(right);
+  return overlapShingles(shingles(left), shingles(right));
+}
+function overlapShingles(a: Set<string>, b: Set<string>): { score: number; evidence: string } {
   if (!a.size || !b.size) return { score: 0, evidence: '' };
   let common = 0; let witness = '';
   for (const phrase of a) if (b.has(phrase)) { common++; if (!witness) witness = phrase; }
@@ -45,7 +47,23 @@ export function overlap(left: string, right: string): { score: number; evidence:
 export function extractUrls(content: string): string[] {
   const raw = content.match(/https?:\/\/[^\s<>"']+/giu) ?? [];
   const values: string[] = [];
-  for (const candidate of raw) try { values.push(normalizeUrl(candidate.replace(/[),.;!?\]}]+$/, ''))); } catch { /* Non-URL text is not evidence. */ }
+  for (const candidate of raw) try {
+    const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+    const balance: Record<string, number> = { '(': 0, '[': 0, '{': 0 };
+    for (const character of candidate) {
+      if (Object.hasOwn(balance, character)) balance[character]++;
+      else if (pairs[character]) balance[pairs[character]]--;
+    }
+    let end = candidate.length;
+    while (end) {
+      const last = candidate[end - 1];
+      if (/[,.!?;]/.test(last)) { end--; continue; }
+      const opening = pairs[last];
+      if (opening && balance[opening] < 0) { end--; balance[opening]++; continue; }
+      break;
+    }
+    values.push(normalizeUrl(candidate.slice(0, end)));
+  } catch { /* Non-URL text is not evidence. */ }
   return [...new Set(values)];
 }
 export function analyzeSources(input: unknown, threshold = 0.55): Report {
@@ -57,8 +75,9 @@ export function analyzeSources(input: unknown, threshold = 0.55): Report {
       if (target && target.id !== source.id) edges.push({ from: source.id, to: target.id, kind: 'citation', score: 1, evidence: url });
     }
   }
+  const phrases = sources.map(source => shingles(source.content));
   for (let i = 0; i < sources.length; i++) for (let j = i + 1; j < sources.length; j++) {
-    const match = overlap(sources[i].content, sources[j].content);
+    const match = overlapShingles(phrases[i], phrases[j]);
     if (match.score >= threshold && match.evidence) edges.push({ from: sources[i].id, to: sources[j].id, kind: 'overlap', score: Number(match.score.toFixed(4)), evidence: match.evidence });
   }
   const parent = new Map(sources.map(s => [s.id, s.id]));

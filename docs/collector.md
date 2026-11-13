@@ -24,7 +24,7 @@ Public-address filtering is intentionally conservative; some globally reachable 
 
 ## Extraction
 
-The collector uses a bounded, simple HTML-to-text pass. Script/style/noscript/template blocks are removed, common entities decoded, and quoted anchor URLs retained as absolute citations. The HTML title becomes the source title. Publication dates are left unknown. Content is truncated to the first 100,000 characters to satisfy the corpus contract.
+HTML and XHTML responses use a bounded, simple HTML-to-text pass. Script/style/noscript/template blocks are removed, common entities decoded, and quoted anchor URLs retained as absolute citations. The HTML title becomes the source title. Plain-text responses retain literal angle brackets, entities, and markup-like examples; their title is the final hostname. Publication dates are left unknown. Content is truncated to the first 100,000 characters to satisfy the corpus contract.
 
 The collector assumes UTF-8, does not render JavaScript, and does not reliably remove site navigation, footers, or boilerplate. HTML extraction is not browser-equivalent. Review and edit every collected source before interpreting its relationships. Use your own authorized plain-text excerpts for paywalled, authenticated, non-UTF-8, or JavaScript-only sources.
 
