@@ -10,6 +10,9 @@ Six links can contain the same passage. SourceDomino helps you notice the patter
 
 ![SourceDomino source map and evidence inspector](docs/assets/screenshot.png)
 
+
+**[Open the live app ↗](https://source-domino.vercel.app/)** · [Deployment guide](docs/DEPLOYMENT.md)
+
 ## Quick start
 
 Use **Node.js 24 LTS** and npm. The browser workbench needs no account, model, API key, or server-side database.
