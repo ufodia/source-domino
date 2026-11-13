@@ -48,8 +48,15 @@ async function requestPinned(url: URL): Promise<{ body: string; redirect?: strin
       lookup: (_host, _options, callback) => callback(null, pinned.address, pinned.family),
       headers: { Accept: 'text/html,text/plain;q=0.9', 'Accept-Encoding': 'identity', 'User-Agent': 'SourceDomino/0.1 (explicit local source collection)' },
     }, response => {
-      if (response.statusCode && [301, 302, 303, 307, 308].includes(response.statusCode)) { response.resume(); if (!response.headers.location) { reject(new Error('Redirect has no destination.')); return; } resolve({ body: '', redirect: new URL(response.headers.location, url).href }); return; }
-      if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300) { response.resume(); reject(new Error(`HTTP ${response.statusCode ?? 'unknown'}`)); return; }
+      if (response.statusCode && [301, 302, 303, 307, 308].includes(response.statusCode)) {
+        const location = response.headers.location;
+        response.destroy();
+        if (!location) { reject(new Error('Redirect has no destination.')); return; }
+        try { resolve({ body: '', redirect: new URL(location, url).href }); }
+        catch { reject(new Error('Redirect has an invalid destination.')); }
+        return;
+      }
+      if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 300) { response.destroy(); reject(new Error(`HTTP ${response.statusCode ?? 'unknown'}`)); return; }
       const type = response.headers['content-type'] ?? '';
       if (!/^(text\/html|text\/plain|application\/xhtml\+xml)(?:;|$)/i.test(type)) { response.destroy(); reject(new Error('Only HTML and plain-text responses are supported.')); return; }
       const encoding = response.headers['content-encoding'];
