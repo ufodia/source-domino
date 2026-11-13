@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "lab",
+      "url": "https://lab.example/report",
+      "title": "The original field report",
+      "content": "Our controlled pilot included twelve volunteers using a document assistant over one week. Participants completed fewer repeated searches when the assistant linked each answer to the original paragraph. The pilot did not measure long term retention, commercial revenue, or performance outside this small group. Further testing with larger samples is needed before drawing broad conclusions.",
+      "publishedAt": "2026-10-03"
+    },
+    {
+      "id": "wire",
+      "url": "https://wire.example/story",
+      "title": "A wire story repeats the pilot",
+      "content": "Our controlled pilot included twelve volunteers using a document assistant over one week. Participants completed fewer repeated searches when the assistant linked each answer to the original paragraph. The pilot did not measure long term retention, commercial revenue, or performance outside this small group. Further testing with larger samples is needed before drawing broad conclusions. Source: https://lab.example/report",
+      "publishedAt": "2026-10-04"
+    },
+    {
+      "id": "digest",
+      "url": "https://digest.example/ai",
+      "title": "The weekly AI digest",
+      "content": "Our controlled pilot included twelve volunteers using a document assistant over one week. Participants completed fewer repeated searches when the assistant linked each answer to the original paragraph. The pilot did not measure long term retention, commercial revenue, or performance outside this small group. Further testing with larger samples is needed before drawing broad conclusions. Read the wire: https://wire.example/story",
+      "publishedAt": "2026-10-05"
+    },
+    {
+      "id": "newsletter",
+      "url": "https://letter.example/42",
+      "title": "A newsletter with the same passage",
+      "content": "Participants completed fewer repeated searches when the assistant linked each answer to the original paragraph. The pilot did not measure long term retention, commercial revenue, or performance outside this small group. Further testing with larger samples is needed before drawing broad conclusions. Via https://digest.example/ai"
+    },
+    {
+      "id": "critique",
+      "url": "https://review.example/notes",
+      "title": "An independently worded critique",
+      "content": "Twelve participants and seven days cannot establish that a product improves professional research in general. A useful next experiment would separate interface improvements from model quality and repeat the task with independent evaluators. The source deserves credit for its caveats: https://lab.example/report",
+      "publishedAt": "2026-10-06"
+    },
+    {
+      "id": "unrelated",
+      "url": "https://garden.example/soil",
+      "title": "An unrelated source for comparison",
+      "content": "Healthy soil supports roots through drainage and organic matter. Gardeners can compare beds by checking moisture at consistent depths throughout the growing season. Shade, rainfall, and local climate matter more than a universal watering schedule.",
+      "publishedAt": "2026-10-01"
+    }
+  ],
+  "threshold": 0.55,
+  "edges": [
+    {
+      "from": "wire",
+      "to": "lab",
+      "kind": "citation",
+      "score": 1,
+      "evidence": "https://lab.example/report"
+    },
+    {
+      "from": "digest",
+      "to": "wire",
+      "kind": "citation",
+      "score": 1,
+      "evidence": "https://wire.example/story"
+    },
+    {
+      "from": "newsletter",
+      "to": "digest",
+      "kind": "citation",
+      "score": 1,
+      "evidence": "https://digest.example/ai"
+    },
+    {
+      "from": "critique",
+      "to": "lab",
+      "kind": "citation",
+      "score": 1,
+      "evidence": "https://lab.example/report"
+    },
+    {
+      "from": "lab",
+      "to": "wire",
+      "kind": "overlap",
+      "score": 1,
+      "evidence": "our controlled pilot included twelve"
+    },
+    {
+      "from": "lab",
+      "to": "digest",
+      "kind": "overlap",
+      "score": 1,
+      "evidence": "our controlled pilot included twelve"
+    },
+    {
+      "from": "lab",
+      "to": "newsletter",
+      "kind": "overlap",
+      "score": 0.8837,
+      "evidence": "participants completed fewer repeated searches"
+    },
+    {
+      "from": "wire",
+      "to": "digest",
+      "kind": "overlap",
+      "score": 0.9107,
+      "evidence": "our controlled pilot included twelve"
+    },
+    {
+      "from": "wire",
+      "to": "newsletter",
+      "kind": "overlap",
+      "score": 0.8837,
+      "evidence": "participants completed fewer repeated searches"
+    },
+    {
+      "from": "digest",
+      "to": "newsletter",
+      "kind": "overlap",
+      "score": 0.8837,
+      "evidence": "participants completed fewer repeated searches"
+    }
+  ],
+  "groups": [
+    {
+      "id": "group-1",
+      "members": [
+        "lab",
+        "wire",
+        "digest",
+        "newsletter"
+      ],
+      "earliestCandidate": "lab",
+      "dateNote": "1 undated source(s). Earliest supplied date is a candidate only; dates are not verified."
+    },
+    {
+      "id": "group-2",
+      "members": [
+        "critique"
+      ],
+      "earliestCandidate": "critique",
+      "dateNote": "Earliest supplied date is a candidate only; dates are not verified."
+    },
+    {
+      "id": "group-3",
+      "members": [
+        "unrelated"
+      ],
+      "earliestCandidate": "unrelated",
+      "dateNote": "Earliest supplied date is a candidate only; dates are not verified."
+    }
+  ],
+  "caveat": "Citation and wording relationships in supplied text only. Similarity does not prove copying, independence, truth, or original authorship."
+}
