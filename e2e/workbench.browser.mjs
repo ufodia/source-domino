@@ -61,3 +61,22 @@ for(const closeMode of ['button','escape'])test(`closing a pending corpus import
   await expect(page.locator('#source-count')).toHaveText('6');
   await expect(page.locator('#corpus-label')).toHaveText('SYNTHETIC DEMO');
 });
+
+
+test('keyboard source selection retains focus and corpus dialogs have names',async({page})=>{
+  await page.goto('/');
+  const node=page.locator('#graph .map-node').nth(1);
+  const source=await node.getAttribute('data-source');
+  await node.focus();await page.keyboard.press('Enter');
+  await expect(page.locator(`#graph .map-node[data-source="${source}"]`)).toBeFocused();
+  const row=page.locator('.source-info').nth(2);
+  const rowSource=await row.getAttribute('data-source');
+  await row.focus();await page.keyboard.press('Enter');
+  await expect(page.locator(`.source-info[data-source="${rowSource}"]`)).toBeFocused();
+  await page.locator('#import-open').focus();await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog',{name:'Bring your own corpus',exact:true})).toBeVisible();
+  await page.keyboard.press('Escape');await expect(page.locator('#import-open')).toBeFocused();
+  await page.locator('#add').focus();await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog',{name:'Add source',exact:true})).toBeVisible();
+  await page.keyboard.press('Escape');await expect(page.locator('#add')).toBeFocused();
+});
