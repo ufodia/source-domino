@@ -56,6 +56,31 @@ describe('relationship evidence', () => {
     expect(overlap(demoSources[0].content, excerpt).score).toBe(1);
     expect(overlap(demoSources[0].content, demoSources[5].content).score).toBe(0);
   });
+  it('finds an exact 12-word passage in long unrelated articles independently of the ratio threshold', () => {
+    const passage = 'The careful investigation found that every quoted source deserved a second independent';
+    const left = Array.from({length: 150}, (_, i) => `alpha${i} uniqueleft${i} uncommonleft${i}`).join(' ');
+    const right = Array.from({length: 150}, (_, i) => `beta${i} uniqueright${i} uncommonright${i}`).join(' ');
+    const sources = [{...demoSources[0], content:`${left} ${passage}`}, {...demoSources[1], content:`${right} ${passage}`}];
+    for (const threshold of [0.1, 0.55, 1]) {
+      const report = analyzeSources(sources, threshold);
+      const edge = report.edges.find(e => e.kind === 'overlap');
+      expect(edge).toMatchObject({basis:'passage', evidence:passage.toLowerCase()});
+      expect(edge!.score).toBeLessThan(0.1);
+      expect(report.groups).toHaveLength(1);
+    }
+    const noPassage=analyzeSources([{...sources[0],content:left},{...sources[1],content:right}]);
+    expect(noPassage.edges.filter(e=>e.kind==='overlap')).toHaveLength(0);
+    const onlyEleven=passage.split(' ').slice(0,11).join(' ');
+    expect(analyzeSources([{...sources[0],content:`${left} ${onlyEleven}`},{...sources[1],content:`${right} ${onlyEleven}`}]).edges.filter(e=>e.kind==='overlap')).toHaveLength(0);
+  });
+  it('groups a short news item sharing a 15-word sentence despite low containment', () => {
+    const passage = 'The researchers published a detailed report after carefully checking all results with three independent reviewers';
+    const article=Array.from({length:80},(_,i)=>`alpha${i} uniqueleft${i}`).join(' ');
+    const story=Array.from({length:50},(_,i)=>`beta${i} uniqueright${i}`).join(' ');
+    const report=analyzeSources([{...demoSources[0],content:`${article} ${passage}`},{...demoSources[1],content:`${story} ${passage}`}]);
+    expect(report.edges.find(e=>e.kind==='overlap')).toMatchObject({basis:'passage',evidence:passage.toLowerCase().split(' ').slice(0,12).join(' ')});
+    expect(report.groups).toHaveLength(1);
+  });
   it('does not group sources merely because they cite each other', () => {
     const report = analyzeSources([demoSources[0], demoSources[4]]);
     expect(report.edges[0].kind).toBe('citation'); expect(report.groups).toHaveLength(2);

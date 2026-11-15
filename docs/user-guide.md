@@ -8,15 +8,15 @@ Use **Add source** for a record, **Edit** for a correction, or **Import corpus**
 
 ## Read the graph
 
-Solid arrows point from the citing source toward the cited source. They represent an exact normalized URL found in the supplied content. Dashed lines represent shared wording above the configured threshold. A pair can have both kinds of relationship.
+Solid arrows point from the citing source toward the cited source. They represent an exact normalized URL found in the supplied content. Dashed lines represent shared wording: either five-word containment above the configured threshold or a contiguous 12-word passage. A pair can have both kinds of relationship.
 
 Select a graph node or corpus row to inspect it. Graph nodes also accept keyboard focus; Enter and Space select a node. The inspector lists related sources, the matching URL or shared phrase, and the source's literal text. Follow the source-domain link only when you intend to open that external website.
 
 ## Adjust wording families
 
-The engine compares sets of normalized five-word phrases. The score is the number of shared phrases divided by the smaller phrase-set size. This containment measure can identify a short excerpt that repeats a longer source.
+The engine compares sets of normalized five-word phrases. The score is the number of shared phrases divided by the smaller phrase-set size. A separate 12-word contiguous match creates a relationship even when the shared passage is a small fraction of two long documents. Its evidence is normalized for case and punctuation.
 
-The default threshold is 55%. Move the slider and release it to recalculate families. A higher value requires stronger overlap. **Collapse families** shows one node for each connected overlap group. Citation arrows between groups remain visible; internal links are hidden in that view. **Expand families** returns to individual records.
+The default containment threshold is 55%. Move the slider and release it to recalculate families. It does not suppress 12-word passage matches. **Collapse families** shows one node for each connected overlap group. Citation arrows between groups remain visible; internal links are hidden in that view. **Expand families** returns to individual records.
 
 Group membership is transitive: A may overlap B, and B may overlap C, without A and C meeting the threshold directly. Inspect pair evidence before interpreting a family as one source.
 

@@ -17,7 +17,7 @@ flowchart LR
 
 ## Relationship engine
 
-`src/core.ts` is pure TypeScript. Citation edges use matching normalized URLs; overlap edges use normalized Unicode letter/number token sets and five-word shingles. Connected components over overlap edges define wording families. Citation edges do not merge components. Optional user-supplied dates produce candidate labels with explicit uncertainty.
+`src/core.ts` is pure TypeScript. Citation edges use matching normalized URLs; overlap edges use five-word shingle containment or a contiguous normalized 12-word passage. Connected components over overlap edges define wording families. Citation edges do not merge components. Optional user-supplied dates produce candidate labels with explicit uncertainty.
 
 ## Browser workbench
 

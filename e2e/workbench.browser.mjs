@@ -8,6 +8,20 @@ async function getDownload(page,button){
   return {download,content:await readFile(await download.path(),'utf8')};
 }
 
+test('long documents show a short shared passage with its evidence',async({page})=>{
+  const passage='The careful investigation found that every quoted source deserved a second independent';
+  const left=Array.from({length:150},(_,i)=>`alpha${i} uniqueleft${i} uncommonleft${i}`).join(' ');
+  const right=Array.from({length:150},(_,i)=>`beta${i} uniqueright${i} uncommonright${i}`).join(' ');
+  const sources=[{id:'a',title:'First article',url:'https://first.example/',content:`${left} ${passage}`},{id:'b',title:'Second article',url:'https://second.example/',content:`${right} ${passage}`}];
+  await page.goto('/');await page.locator('#import-open').click();
+  await page.locator('#import-text').fill(JSON.stringify({sources}));await page.locator('#import-apply').click();
+  await expect(page.locator('#family-count')).toHaveText('1');
+  await expect(page.locator('#inspector-content')).toContainText('Shared 12-word passage (normalized)');
+  await expect(page.locator('#inspector-content')).toContainText(passage.toLowerCase());
+  const exported=await getDownload(page,page.locator('#export'));
+  expect(JSON.parse(exported.content).edges[0]).toMatchObject({basis:'passage',evidence:passage.toLowerCase()});
+});
+
 test('local workbench: analysis, evidence, export and responsive layout',async({page},testInfo)=>{
   const errors=[];
   page.on('pageerror',error=>errors.push(error.message));

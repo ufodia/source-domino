@@ -1,5 +1,5 @@
 export interface Source { id: string; url: string; title: string; content: string; publishedAt?: string }
-export interface Edge { from: string; to: string; kind: 'citation' | 'overlap'; score: number; evidence: string }
+export interface Edge { from: string; to: string; kind: 'citation' | 'overlap'; score: number; evidence: string; basis?: 'containment' | 'passage' }
 export interface Group { id: string; members: string[]; earliestCandidate: string | null; dateNote: string }
 export interface Report { schemaVersion: 1; sources: Source[]; threshold: number; edges: Edge[]; groups: Group[]; caveat: string }
 export const MAX_SOURCES = 20;
@@ -76,9 +76,14 @@ export function analyzeSources(input: unknown, threshold = 0.55): Report {
     }
   }
   const phrases = sources.map(source => shingles(source.content));
+  // Eight consecutive matching five-word shingles form a 12-word passage.
+  // This length threshold is independent of total article size.
+  const passages = sources.map(source => shingles(source.content, 12));
   for (let i = 0; i < sources.length; i++) for (let j = i + 1; j < sources.length; j++) {
     const match = overlapShingles(phrases[i], phrases[j]);
-    if (match.score >= threshold && match.evidence) edges.push({ from: sources[i].id, to: sources[j].id, kind: 'overlap', score: Number(match.score.toFixed(4)), evidence: match.evidence });
+    let passage: string | undefined;
+    for (const phrase of passages[i]) if (passages[j].has(phrase)) { passage = phrase; break; }
+    if (passage || (match.score >= threshold && match.evidence)) edges.push({ from: sources[i].id, to: sources[j].id, kind: 'overlap', score: Number(match.score.toFixed(4)), evidence: passage || match.evidence, basis: passage ? 'passage' : 'containment' });
   }
   const parent = new Map(sources.map(s => [s.id, s.id]));
   function find(id: string): string { const p = parent.get(id)!; if (p === id) return p; const result = find(p); parent.set(id, result); return result; }

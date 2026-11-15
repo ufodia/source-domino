@@ -18,7 +18,7 @@ URL normalization removes fragments and known tracking parameters (`utm_*`, `fbc
 
 `schemaVersion: 1` contains validated `sources`, numeric `threshold`, `edges`, `groups`, and a `caveat`. A citation edge has `from`, `to`, `kind: citation`, `score: 1`, and the matching normalized URL as evidence. Its score indicates an exact URL match, not confidence in a claim.
 
-An overlap edge has `kind: overlap`, a containment score from 0 to 1 rounded to four decimals, and one shared five-word phrase. `from` and `to` are unordered for overlap edges. The displayed percentage is a text-set measure, not a probability.
+An overlap edge has `kind: overlap`, a five-word containment score from 0 to 1 rounded to four decimals, and normalized evidence. `basis` is `passage` for a contiguous shared 12-word passage, or `containment` for a threshold-qualified shared five-word phrase. A passage edge may have a score below the configured threshold. `from` and `to` are unordered for overlap edges. The displayed percentage is a text-set measure, not a probability.
 
 Groups contain member IDs, an optional `earliestCandidate`, and a date explanation. Ties or no dates produce a null candidate. Missing dates prevent any claim that the known earliest record is actually the origin.
 

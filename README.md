@@ -27,7 +27,7 @@ npm run dev
 Open the URL printed by Vite. A six-source **synthetic corpus** loads immediately. Its `.example` URLs are illustrative and are never fetched by the browser.
 
 1. Select **The original field report** in the source map.
-2. Inspect the declared citations and shared five-word phrases in the side panel.
+2. Inspect declared citations and shared wording evidence in the side panel.
 3. Select **Collapse families** to see overlapping wording grouped together.
 4. Change the threshold, edit the source text, or import your own corpus.
 5. Export the evidence report as JSON.
@@ -37,8 +37,8 @@ Open the URL printed by Vite. A six-source **synthetic corpus** loads immediatel
 | Capability | Evidence you can inspect |
 | --- | --- |
 | Citation graph | An exact HTTP(S) URL found in supplied source text |
-| Wording overlap | A containment score and a shared five-word phrase |
-| Family view | Connected groups of sources whose wording overlaps above your threshold |
+| Wording overlap | A five-word containment score and evidence of a shared five-word phrase or a normalized 12-word passage |
+| Family view | Sources linked by containment above your threshold or a shared 12-word passage |
 | Earliest dated candidate | The earliest supplied date, with ties and missing dates called out |
 | Editable corpus | Source title, canonical URL, optional date, and literal source text |
 | Reusable report | Sources, relationship evidence, groups, threshold, and explicit caveat |
