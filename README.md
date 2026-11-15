@@ -120,6 +120,8 @@ If SourceDomino helps you untangle a citation trail, you can support Ufodia's wo
 
 <a href="https://buymeacoffee.com/ufodia"><img src="docs/assets/coffee-button.svg" alt="Buy me a coffee — support Ufodia" width="230"></a>
 
+You can also [sponsor ufodia on GitHub](https://github.com/sponsors/ufodia).
+
 ## License
 
 [MIT](LICENSE) © 2026 **Ufodia**. Original artwork and the synthetic corpus are included under this license. Collected third-party content retains its original rights; use excerpts you are entitled to process and share. Dependency licenses remain with their respective authors.
