@@ -73,6 +73,18 @@ describe('relationship evidence', () => {
     const onlyEleven=passage.split(' ').slice(0,11).join(' ');
     expect(analyzeSources([{...sources[0],content:`${left} ${onlyEleven}`},{...sources[1],content:`${right} ${onlyEleven}`}]).edges.filter(e=>e.kind==='overlap')).toHaveLength(0);
   });
+  it('shows how shared five-word phrases cover a short and a long source', () => {
+    const passage = 'The careful investigation found that every quoted source deserved a second independent';
+    const longText = Array.from({length:150},(_,i)=>`alpha${i} uniqueleft${i} uncommonleft${i}`).join(' ');
+    const edge = analyzeSources([
+      {...demoSources[0],content:`${longText} ${passage}`},
+      {...demoSources[1],content:passage},
+    ]).edges.find(item=>item.kind==='overlap')!;
+    expect(edge.score).toBe(1);
+    expect(edge.phraseCoverage).toMatchObject({shared:8});
+    expect(edge.phraseCoverage!.fromTotal).toBeGreaterThan(edge.phraseCoverage!.shared);
+    expect(edge.phraseCoverage!.toTotal).toBe(edge.phraseCoverage!.shared);
+  });
   it('groups a short news item sharing a 15-word sentence despite low containment', () => {
     const passage = 'The researchers published a detailed report after carefully checking all results with three independent reviewers';
     const article=Array.from({length:80},(_,i)=>`alpha${i} uniqueleft${i}`).join(' ');

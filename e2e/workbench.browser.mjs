@@ -18,6 +18,8 @@ test('long documents show a short shared passage with its evidence',async({page}
   await expect(page.locator('#family-count')).toHaveText('1');
   await expect(page.locator('#inspector-content')).toContainText('Shared 12-word passage (normalized)');
   await expect(page.locator('#inspector-content')).toContainText(passage.toLowerCase());
+  await expect(page.locator('#inspector-content')).toContainText('Unique five-word phrase coverage:');
+  await expect(page.locator('#inspector-content')).toContainText('This link is triggered by a shared 12-word passage');
   const exported=await getDownload(page,page.locator('#export'));
   expect(JSON.parse(exported.content).edges[0]).toMatchObject({basis:'passage',evidence:passage.toLowerCase()});
 });

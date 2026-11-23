@@ -10,7 +10,7 @@ Use **Add source** for a record, **Edit** for a correction, or **Import corpus**
 
 Solid arrows point from the citing source toward the cited source. They represent an exact normalized URL found in the supplied content. Dashed lines represent shared wording: either five-word containment above the configured threshold or a contiguous 12-word passage. A pair can have both kinds of relationship.
 
-Select a graph node or corpus row to inspect it. Graph nodes also accept keyboard focus; Enter and Space select a node. The inspector lists related sources, the matching URL or shared phrase, and the source's literal text. Follow the source-domain link only when you intend to open that external website.
+Select a graph node or corpus row to inspect it. Graph nodes also accept keyboard focus; Enter and Space select a node. The inspector lists related sources, the matching URL or shared phrase, per-source coverage of distinct normalized five-word phrases, and the source's literal text. A 12-word passage can trigger a relationship independently of the threshold. Coverage is a phrase-set ratio, not the share of raw words; titles are metadata and are not analyzed, so the tool does not label a match as headline or body text. Follow the source-domain link only when you intend to open that external website.
 
 ## Adjust wording families
 

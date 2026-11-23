@@ -37,7 +37,7 @@ Open the URL printed by Vite. A six-source **synthetic corpus** loads immediatel
 | Capability | Evidence you can inspect |
 | --- | --- |
 | Citation graph | An exact HTTP(S) URL found in supplied source text |
-| Wording overlap | A five-word containment score and evidence of a shared five-word phrase or a normalized 12-word passage |
+| Wording overlap | A five-word containment score, per-source coverage of distinct shared five-word phrases, and evidence of a shared five-word phrase or normalized 12-word passage |
 | Family view | Sources linked by containment above your threshold or a shared 12-word passage |
 | Earliest dated candidate | The earliest supplied date, with ties and missing dates called out |
 | Editable corpus | Source title, canonical URL, optional date, and literal source text |

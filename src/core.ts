@@ -1,5 +1,5 @@
 export interface Source { id: string; url: string; title: string; content: string; publishedAt?: string }
-export interface Edge { from: string; to: string; kind: 'citation' | 'overlap'; score: number; evidence: string; basis?: 'containment' | 'passage' }
+export interface Edge { from: string; to: string; kind: 'citation' | 'overlap'; score: number; evidence: string; basis?: 'containment' | 'passage'; phraseCoverage?: { shared: number; fromTotal: number; toTotal: number } }
 export interface Group { id: string; members: string[]; earliestCandidate: string | null; dateNote: string }
 export interface Report { schemaVersion: 1; sources: Source[]; threshold: number; edges: Edge[]; groups: Group[]; caveat: string }
 export const MAX_SOURCES = 20;
@@ -35,14 +35,15 @@ export function parseSources(text: string): Source[] { if (text.length > 2_500_0
 export function tokens(text: string): string[] { return text.toLocaleLowerCase('en').match(/[\p{L}\p{N}]+/gu) ?? []; }
 export function shingles(text: string, size = 5): Set<string> { const words = tokens(text); const set = new Set<string>(); for (let i = 0; i <= words.length - size; i++) set.add(words.slice(i, i + size).join(' ')); return set; }
 export function overlap(left: string, right: string): { score: number; evidence: string } {
-  return overlapShingles(shingles(left), shingles(right));
+  const { score, evidence } = overlapShingles(shingles(left), shingles(right));
+  return { score, evidence };
 }
-function overlapShingles(a: Set<string>, b: Set<string>): { score: number; evidence: string } {
-  if (!a.size || !b.size) return { score: 0, evidence: '' };
+function overlapShingles(a: Set<string>, b: Set<string>): { score: number; evidence: string; shared: number; leftTotal: number; rightTotal: number } {
+  if (!a.size || !b.size) return { score: 0, evidence: '', shared: 0, leftTotal: a.size, rightTotal: b.size };
   let common = 0; let witness = '';
   for (const phrase of a) if (b.has(phrase)) { common++; if (!witness) witness = phrase; }
   // Containment, not Jaccard: a short syndicated excerpt can overlap a long original.
-  return { score: common / Math.min(a.size, b.size), evidence: witness };
+  return { score: common / Math.min(a.size, b.size), evidence: witness, shared: common, leftTotal: a.size, rightTotal: b.size };
 }
 export function extractUrls(content: string): string[] {
   const raw = content.match(/https?:\/\/[^\s<>"']+/giu) ?? [];
@@ -83,7 +84,7 @@ export function analyzeSources(input: unknown, threshold = 0.55): Report {
     const match = overlapShingles(phrases[i], phrases[j]);
     let passage: string | undefined;
     for (const phrase of passages[i]) if (passages[j].has(phrase)) { passage = phrase; break; }
-    if (passage || (match.score >= threshold && match.evidence)) edges.push({ from: sources[i].id, to: sources[j].id, kind: 'overlap', score: Number(match.score.toFixed(4)), evidence: passage || match.evidence, basis: passage ? 'passage' : 'containment' });
+    if (passage || (match.score >= threshold && match.evidence)) edges.push({ from: sources[i].id, to: sources[j].id, kind: 'overlap', score: Number(match.score.toFixed(4)), evidence: passage || match.evidence, basis: passage ? 'passage' : 'containment', phraseCoverage: { shared: match.shared, fromTotal: match.leftTotal, toTotal: match.rightTotal } });
   }
   const parent = new Map(sources.map(s => [s.id, s.id]));
   function find(id: string): string { const p = parent.get(id)!; if (p === id) return p; const result = find(p); parent.set(id, result); return result; }

@@ -63,7 +63,17 @@ function renderInspector() {
     const kind = document.createElement('span'); kind.className = 'relationship-kind'; kind.textContent = edge.kind === 'citation' ? (edge.from === source.id ? 'CITES →' : '← CITED BY') : `SHARED WORDING · ${Math.round(edge.score * 100)}% FIVE-WORD CONTAINMENT`;
     const title = document.createElement('button'); title.textContent = other.title; title.onclick = () => { selected = other.id; refresh(); el('inspector-content').querySelector<HTMLElement>('h2')?.focus(); };
     const evidence = document.createElement('p'); evidence.textContent = edge.kind === 'citation' ? edge.evidence : `${edge.basis === 'passage' ? 'Shared 12-word passage (normalized)' : 'Shared five-word phrase'}: “${edge.evidence}”`;
-    box.append(kind, title, evidence); panel.append(box);
+    box.append(kind, title, evidence);
+    if (edge.kind === 'overlap' && edge.phraseCoverage) {
+      const from = sources.find(s => s.id === edge.from)!; const to = sources.find(s => s.id === edge.to)!;
+      const coverage = document.createElement('p'); const { shared, fromTotal, toTotal } = edge.phraseCoverage;
+      const fromPercent = fromTotal ? Math.round(shared / fromTotal * 100) : 0; const toPercent = toTotal ? Math.round(shared / toTotal * 100) : 0;
+      coverage.textContent = `Unique five-word phrase coverage: ${shared}/${fromTotal} (${fromPercent}%) of “${from.title}”; ${shared}/${toTotal} (${toPercent}%) of “${to.title}”.`;
+      const caveat = document.createElement('p'); caveat.className = 'explanation';
+      caveat.textContent = `${edge.basis === 'passage' ? 'This link is triggered by a shared 12-word passage, independently of the threshold. ' : ''}Coverage counts distinct normalized five-word phrases in supplied text, not raw words or a likelihood of copying. Source titles are not analyzed.`;
+      box.append(coverage, caveat);
+    }
+    panel.append(box);
   });
   const excerpt = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = 'Read supplied source text'; const content = document.createElement('p'); content.className = 'source-text'; content.textContent = source.content; excerpt.append(summary, content); panel.append(excerpt);
 }
